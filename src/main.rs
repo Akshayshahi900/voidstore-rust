@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::collections::btree_map::Keys;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 
@@ -47,7 +46,7 @@ fn main() {
         match stream {
             Ok(stream) => {
                 println!("new connection: {}", stream.peer_addr().unwrap());
-                handle_client(stream);
+                handle_client(stream , &mut db);
             }
 
             Err(e) => {
@@ -57,24 +56,32 @@ fn main() {
     }
 }
 
-fn handle_client(mut stream: TcpStream) {
+fn handle_client(mut stream: TcpStream ,db :&mut Database ) {
     let mut buffer = [0; 1024];
+    loop 
+    {match stream.read(&mut buffer) {
 
-    match stream.read(&mut buffer) {
-        Ok(bytes_read) => {
-            println!(
-                "Recieved:{}",
-                String::from_utf8_lossy(&buffer[..bytes_read])
-            );
+        Ok(0) =>{
+            println!("Client disconnected");
+        }
 
-            let response = "hello from Rust tcp server!";
+        Ok(n) => {
+
+            let input=  String::from_utf8_lossy(&buffer[..n]);
+            
+            println!("Recieved Input{}", input);
+            let response = 
+            match parse_command(&input){
+                Some(cmd) =>db.execute(cmd),
+                None=>"Error invalid Command".to_string(),
+            };
 
             stream.write_all(response.as_bytes()).unwrap();
         }
         Err(e) => {
             eprintln!("Failed to read:{}", e);
         }
-    }
+    }}
 }
 
 fn parse_command(input: &str) -> Option<Command> {
