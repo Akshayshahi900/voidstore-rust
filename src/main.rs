@@ -11,7 +11,7 @@ impl Database {
         match cmd {
             Command::Set(key, value) => {
                 self.store.insert(key, value);
-                "OK".to_string()
+                "OK\n".to_string()
             }
             Command::Get(key) => self.store.get(&key).cloned().unwrap_or("(nil)".to_string()),
             Command::Del(key) => {
